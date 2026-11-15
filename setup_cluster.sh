@@ -12,8 +12,7 @@ set -e
 
 AIZYMES=True
 ENV_NAME=py311
-JUPYTER_PORT=23289      # offered as the default at the prompt
-HUB_API_PORT=23291      # configurable-http-proxy REST api, jupyterhub only
+JUPYTER_PORT=23289
 
 USER=$(id -un)
 
@@ -55,39 +54,22 @@ source "$(dirname "$0")/$CLUSTER.sh"
 eval "$(conda shell.bash hook)"
 
 if conda env list | grep -qw "$ENV_NAME"; then
-    echo "Conda env already there, nothing installed: $ENV_NAME"
+    echo "Conda env already there: $ENV_NAME"
 else
     conda create -n $ENV_NAME python=3.11 -y
-    conda activate $ENV_NAME
-
-    # conda first, then pip, so conda does not overwrite pip-installed files
-    conda install -c conda-forge mdtraj mdanalysis libnetcdf scikit-learn -y
-    pip install rdkit notebook ipywidgets pytraj umap-learn torch fair-esm transformers ipykernel \
-                jupyterlab jupyter_server jupyterhub jupyterhub-firstuseauthenticator
-    python -m ipykernel install --user --name $ENV_NAME --display-name "Python ($ENV_NAME)"
-
     echo "Conda env created: $ENV_NAME"
 fi
 
-# ------------------------------- jupyterhub -----------------------------------
+conda activate $ENV_NAME
 
-if [[ -f ~/.jupyter/jupyterhub_config.py ]]; then
-    echo "Jupyterhub config already there, nothing changed"
-else
-    mkdir -p ~/.jupyter
-    jupyterhub --generate-config -f ~/.jupyter/jupyterhub_config.py
+# Both tools skip whatever is already present, so this also repairs an
+# environment left half-installed by an interrupted run.
+# conda first, then pip, so conda does not overwrite pip-installed files
+conda install -c conda-forge mdtraj mdanalysis libnetcdf scikit-learn -y
+pip install rdkit notebook ipywidgets pytraj umap-learn torch fair-esm transformers ipykernel \
+            jupyterlab jupyter_server
 
-    cat >> ~/.jupyter/jupyterhub_config.py <<EOF
-
-c.JupyterHub.authenticator_class = 'firstuseauthenticator.FirstUseAuthenticator'
-c.Authenticator.allowed_users = {'$USER'}
-c.Authenticator.admin_users = {'$USER'}
-c.FirstUseAuthenticator.dbm_path = '$HOME/.jupyter/jupyterhub-users.dbm'
-c.ConfigurableHTTPProxy.api_url = 'http://127.0.0.1:$HUB_API_PORT'
-EOF
-
-    echo "Jupyterhub config written"
-fi
+python -m ipykernel install --user --name $ENV_NAME --display-name "Python ($ENV_NAME)"
 
 # -------------------------------- jupyter.sh ----------------------------------
 
@@ -103,8 +85,6 @@ cat > ~/bin/jupyter.sh <<EOF
 #!/usr/bin/env bash
 # written by setup_cluster.sh
 
-rm -f ~/.jupyter/jupyterhub-proxy.pid
-pkill -f -u \$(whoami) "jupyterhub|configurable-http-proxy"
 jupyter lab --no-browser --port=$PORT
 EOF
 
