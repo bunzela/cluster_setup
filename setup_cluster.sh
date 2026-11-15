@@ -12,7 +12,7 @@ set -e
 
 AIZYMES=True
 
-USER=${USER:-$(id -un)}   # empty USER would hit all of /u and /ptmp
+USER=$(id -un)
 
 # ------------------------------ which cluster ---------------------------------
 
