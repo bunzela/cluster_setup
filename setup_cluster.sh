@@ -83,7 +83,6 @@ fi
 
 cat > ~/bin/jupyter.sh <<EOF
 #!/usr/bin/env bash
-# written by setup_cluster.sh
 
 jupyter lab --no-browser --port=$PORT
 EOF
