@@ -2,12 +2,15 @@
 #
 # raven.sh
 #
-# Raven specifics. Sourced by setup_cluster.sh.
+# Raven modules and python. Sourced by setup_cluster.sh.
 
-# ------------------------------ load modules ----------------------------------
+PYTHON_MODULE=python-waterboa/2026.07
+
+# load it now, the rest of setup_cluster.sh needs conda
+module load $PYTHON_MODULE
 
 MODULES=(
-    'module load python-waterboa/2026.07'
+    "module load $PYTHON_MODULE"
 )
 
 for line in "${MODULES[@]}"; do
