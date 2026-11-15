@@ -41,7 +41,8 @@ fi
 # --------------------- modules and python, per cluster ------------------------
 
 if ! type module &>/dev/null; then
-    source /etc/profile.d/modules.sh
+    echo "module command not found"
+    exit 1
 fi
 
 source "$(dirname "$0")/$CLUSTER.sh"
