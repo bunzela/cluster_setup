@@ -72,6 +72,14 @@ pip install rdkit notebook ipywidgets pytraj umap-learn torch fair-esm transform
 
 python -m ipykernel install --user --name $ENV_NAME --display-name "Python ($ENV_NAME)"
 
+# --------------------------------- aizymes -------------------------------------
+
+if [[ "$AIZYMES" == "True" ]]; then
+    source "$(dirname "$0")/aizymes.sh"
+else
+    echo "AIZYMES is $AIZYMES, skipping AIzymes setup"
+fi
+
 # -------------------------------- jupyter.sh ----------------------------------
 
 read -p "Jupyter port ($PORT_MIN-$PORT_MAX): " PORT
