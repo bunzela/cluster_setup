@@ -58,14 +58,9 @@ else
     conda create -n $ENV_NAME python=3.11 -y
     conda activate $ENV_NAME
 
-    pip install rdkit
-    pip install notebook ipywidgets
-    conda install -c conda-forge mdtraj mdanalysis libnetcdf -y
-    pip install pytraj
-    pip install umap-learn torch fair-esm
-    conda install -c conda-forge scikit-learn -y
-    pip install transformers
-    pip install ipykernel
+    # conda first, then pip, so conda does not overwrite pip-installed files
+    conda install -c conda-forge mdtraj mdanalysis libnetcdf scikit-learn -y
+    pip install rdkit notebook ipywidgets pytraj umap-learn torch fair-esm transformers ipykernel
     python -m ipykernel install --user --name $ENV_NAME --display-name "Python ($ENV_NAME)"
 
     echo "Conda env created: $ENV_NAME"
