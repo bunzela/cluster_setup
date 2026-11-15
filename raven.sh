@@ -7,9 +7,7 @@
 # ------------------------------ load modules ----------------------------------
 
 MODULES=(
-    'module load anaconda/3/2023.03'
-    'module load amber/24 gcc/12 impi/2021.9'
-    'module load cuda/13.0'
+    'module load python-waterboa/2026.07'
 )
 
 for line in "${MODULES[@]}"; do
