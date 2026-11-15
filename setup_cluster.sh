@@ -29,7 +29,7 @@ source "$(dirname "$0")/$CLUSTER.sh"
 
 # ------------------------------- permissions ----------------------------------
 
-if getfacl -c /u/$USER | grep -q '^default:group::r'; then
+if getfacl -cp /u/$USER | grep -q '^default:group::r'; then
     echo "Permissions already set, nothing changed"
 else
     # make all files in home and ptmp readable for the group
