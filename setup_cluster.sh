@@ -12,6 +12,8 @@ set -e
 
 AIZYMES=True
 ENV_NAME=py311
+JUPYTER_PORT=23289      # offered as the default at the prompt
+HUB_API_PORT=23291      # configurable-http-proxy REST api, jupyterhub only
 
 USER=$(id -un)
 
@@ -60,11 +62,54 @@ else
 
     # conda first, then pip, so conda does not overwrite pip-installed files
     conda install -c conda-forge mdtraj mdanalysis libnetcdf scikit-learn -y
-    pip install rdkit notebook ipywidgets pytraj umap-learn torch fair-esm transformers ipykernel
+    pip install rdkit notebook ipywidgets pytraj umap-learn torch fair-esm transformers ipykernel \
+                jupyterlab jupyter_server jupyterhub jupyterhub-firstuseauthenticator
     python -m ipykernel install --user --name $ENV_NAME --display-name "Python ($ENV_NAME)"
 
     echo "Conda env created: $ENV_NAME"
 fi
+
+# ------------------------------- jupyterhub -----------------------------------
+
+if [[ -f ~/.jupyter/jupyterhub_config.py ]]; then
+    echo "Jupyterhub config already there, nothing changed"
+else
+    mkdir -p ~/.jupyter
+    jupyterhub --generate-config -f ~/.jupyter/jupyterhub_config.py
+
+    cat >> ~/.jupyter/jupyterhub_config.py <<EOF
+
+c.JupyterHub.authenticator_class = 'firstuseauthenticator.FirstUseAuthenticator'
+c.Authenticator.allowed_users = {'$USER'}
+c.Authenticator.admin_users = {'$USER'}
+c.FirstUseAuthenticator.dbm_path = '$HOME/.jupyter/jupyterhub-users.dbm'
+c.ConfigurableHTTPProxy.api_url = 'http://127.0.0.1:$HUB_API_PORT'
+EOF
+
+    echo "Jupyterhub config written"
+fi
+
+# -------------------------------- jupyter.sh ----------------------------------
+
+read -p "Jupyter port [$JUPYTER_PORT]: " PORT
+PORT=${PORT:-$JUPYTER_PORT}
+
+if [[ ! "$PORT" =~ ^[0-9]+$ ]] || (( PORT < 1024 || PORT > 65535 )); then
+    echo "Not a usable port: $PORT"
+    exit 1
+fi
+
+cat > ~/bin/jupyter.sh <<EOF
+#!/usr/bin/env bash
+# written by setup_cluster.sh
+
+rm -f ~/.jupyter/jupyterhub-proxy.pid
+pkill -f -u \$(whoami) "jupyterhub|configurable-http-proxy"
+jupyter lab --no-browser --port=$PORT
+EOF
+
+chmod +x ~/bin/jupyter.sh
+echo "Wrote ~/bin/jupyter.sh on port $PORT"
 
 # -------------------------------- bashrc --------------------------------------
 
