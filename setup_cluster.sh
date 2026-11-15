@@ -12,7 +12,8 @@ set -e
 
 AIZYMES=True
 ENV_NAME=py311
-JUPYTER_PORT=23289
+PORT_MIN=1024
+PORT_MAX=65535
 
 USER=$(id -un)
 
@@ -73,22 +74,21 @@ python -m ipykernel install --user --name $ENV_NAME --display-name "Python ($ENV
 
 # -------------------------------- jupyter.sh ----------------------------------
 
-read -p "Jupyter port [$JUPYTER_PORT]: " PORT
-PORT=${PORT:-$JUPYTER_PORT}
+read -p "Jupyter port ($PORT_MIN-$PORT_MAX): " PORT
 
-if [[ ! "$PORT" =~ ^[0-9]+$ ]] || (( PORT < 1024 || PORT > 65535 )); then
+if [[ ! "$PORT" =~ ^[0-9]+$ ]] || (( PORT < PORT_MIN || PORT > PORT_MAX )); then
     echo "Not a usable port: $PORT"
     exit 1
 fi
 
-cat > ~/bin/jupyter.sh <<EOF
+cat > ~/jupyter.sh <<EOF
 #!/usr/bin/env bash
 
 jupyter lab --no-browser --port=$PORT
 EOF
 
-chmod +x ~/bin/jupyter.sh
-echo "Wrote ~/bin/jupyter.sh on port $PORT"
+chmod +x ~/jupyter.sh
+echo "Wrote ~/jupyter.sh on port $PORT"
 
 # -------------------------------- bashrc --------------------------------------
 
@@ -106,3 +106,7 @@ for line in "${BASHRC_LINES[@]}"; do
         echo "Added to bashrc:   $line"
     fi
 done
+
+# --------------------------------- finish -------------------------------------
+
+source ~/.bashrc
