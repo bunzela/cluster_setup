@@ -12,6 +12,10 @@ set -e
 
 AIZYMES=True
 ENV_NAME=py311
+
+# torch wheels for Viper, matched to the ROCm on the machine
+ROCM_INDEX=https://download.pytorch.org/whl/rocm6.4
+
 PORT_MIN=1024
 PORT_MAX=65535
 
@@ -63,11 +67,21 @@ fi
 
 conda activate $ENV_NAME
 
+# torch goes first, so that fair-esm and friends find it already satisfied
+# instead of pulling a CUDA build from PyPI
+if [[ "$CLUSTER" == "raven" ]]; then
+    # Nvidia A100, the default wheels are CUDA builds
+    pip install torch torchvision
+else
+    # AMD MI300A, CUDA wheels would install and then ignore the GPU
+    pip install torch torchvision --index-url $ROCM_INDEX
+fi
+
 # Both tools skip whatever is already present, so this also repairs an
 # environment left half-installed by an interrupted run.
 # conda first, then pip, so conda does not overwrite pip-installed files
 conda install -c conda-forge mdtraj mdanalysis libnetcdf scikit-learn -y
-pip install rdkit notebook ipywidgets pytraj umap-learn torch fair-esm transformers ipykernel \
+pip install rdkit notebook ipywidgets pytraj umap-learn fair-esm transformers ipykernel \
             jupyterlab jupyter_server
 
 python -m ipykernel install --user --name $ENV_NAME --display-name "Python ($ENV_NAME)"

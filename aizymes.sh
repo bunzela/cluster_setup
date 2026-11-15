@@ -31,13 +31,24 @@ conda install -c conda-forge bioconda::mmseqs2 openbabel -y
 
 pip install pandas biopython matplotlib ipywidgets bqplot py3Dmol gemmi mdtraj \
             prody ml_collections tree dm-tree rdkit nbstripout cloudpickle polars \
-            torch torchvision "lightning[extra]"
+            "lightning[extra]"
 
-# separate, -U would otherwise upgrade everything above
+# separate, -U would otherwise upgrade everything beside it
 pip install --upgrade MDAnalysis
 
 # last on purpose, the installs above pull numpy 2
 pip install "numpy<2" pandas
+
+# ------------------------------- gpu stack -------------------------------------
+
+if [[ "$CLUSTER" == "raven" ]]; then
+    BOLTZ_SPEC="boltz[cuda]"
+else
+    # boltz has no ROCm extra, so this is a CPU build on Viper
+    BOLTZ_SPEC="boltz"
+fi
+
+echo "Boltz on $CLUSTER: $BOLTZ_SPEC"
 
 # ------------------------------- boltz env -------------------------------------
 
@@ -52,7 +63,12 @@ conda activate $BOLTZ_ENV
 
 conda install -c conda-forge jq openbabel -y
 pip install matplotlib gemmi rdkit
-pip install -U "boltz[cuda]"
+
+if [[ "$CLUSTER" != "raven" ]]; then
+    pip install torch torchvision --index-url $ROCM_INDEX
+fi
+
+pip install -U "$BOLTZ_SPEC"
 
 conda activate $ENV_NAME
 
