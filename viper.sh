@@ -15,6 +15,8 @@ module load $PYTHON_MODULE
 MODULES=(
     "module load $PYTHON_MODULE"
     'module load amber/26'
+    # runs containers, e.g. Rosetta from ~/bin/rosetta.sif
+    'module load apptainer'
 )
 
 for line in "${MODULES[@]}"; do
