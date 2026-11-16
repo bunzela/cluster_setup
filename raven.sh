@@ -13,6 +13,8 @@ MODULES=(
     "module load $PYTHON_MODULE"
     'module load amber/24 gcc/12 impi/2021.9'
     'module load cuda/13.0'
+    # runs containers, e.g. Rosetta from ~/bin/rosetta.sif
+    'module load apptainer'
 )
 
 for line in "${MODULES[@]}"; do
