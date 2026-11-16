@@ -7,6 +7,7 @@
 AIZYMES_REPO=https://github.com/bunzela/AIzymes_dev.git
 AIZYMES_BRANCH=AIzymes_dev_2025
 AIZYMES_DIR=$HOME/bin/AIzymes_dev
+LIGANDMPNN_DIR=$HOME/bin/LigandMPNN
 BOLTZ_ENV=boltz
 
 # ------------------------------ the repository ---------------------------------
@@ -71,6 +72,26 @@ fi
 pip install -U "$BOLTZ_SPEC"
 
 conda activate $ENV_NAME
+
+# ---------------------------- ligandmpnn openfold ------------------------------
+
+# LigandMPNN vendors openfold, which still uses the np.int alias in five dtype
+# arguments. numpy removed that alias in 1.24, and LigandMPNN pins numpy 1.23,
+# so the vendored file is patched instead of holding the whole environment back.
+# np.int64 rather than int, because these are dtype arguments and the precision
+# is better stated than inferred. Upstream has not fixed this, so a git pull
+# brings the alias back and this runs again.
+
+RESIDUE_CONSTANTS=$LIGANDMPNN_DIR/openfold/np/residue_constants.py
+
+if [[ ! -f $RESIDUE_CONSTANTS ]]; then
+    echo "LigandMPNN not at $LIGANDMPNN_DIR, clone it and rerun to patch openfold"
+elif grep -q 'np\.int\b' "$RESIDUE_CONSTANTS"; then
+    sed -i 's/np\.int\b/np.int64/g' "$RESIDUE_CONSTANTS"
+    echo "Patched np.int in:  $RESIDUE_CONSTANTS"
+else
+    echo "Already patched:    $RESIDUE_CONSTANTS"
+fi
 
 # --------------------------------- bashrc --------------------------------------
 
