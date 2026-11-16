@@ -7,8 +7,6 @@
 AIZYMES_REPO=https://github.com/bunzela/AIzymes_dev.git
 AIZYMES_BRANCH=AIzymes_dev_2025
 AIZYMES_DIR=$HOME/bin/AIzymes_dev
-LIGANDMPNN_REPO=https://github.com/dauparas/LigandMPNN.git
-LIGANDMPNN_DIR=$HOME/bin/LigandMPNN
 BOLTZ_ENV=boltz
 
 # ------------------------------ the repository ---------------------------------
@@ -75,34 +73,6 @@ fi
 pip install -U "$BOLTZ_SPEC"
 
 conda activate $ENV_NAME
-
-# ------------------------------- ligandmpnn ------------------------------------
-
-if [[ -d $LIGANDMPNN_DIR ]]; then
-    echo "LigandMPNN already cloned: $LIGANDMPNN_DIR"
-else
-    git clone $LIGANDMPNN_REPO $LIGANDMPNN_DIR
-fi
-
-# LigandMPNN vendors openfold, which uses the numpy aliases removed in 1.24.
-# numpy cannot go below that, scipy needs 1.26.4, so the aliases are rewritten
-# on install. Same command LigandMPNN_check prints. Upstream has not fixed this,
-# so this runs again after a pull. grep finds nothing once patched, and the
-# pipeline swallows its exit status, so the step is safe to repeat.
-grep -rl "np\.int\b\|np\.float\b\|np\.bool\b\|np\.complex\b\|np\.object\b\|np\.str\b" \
-     $LIGANDMPNN_DIR/openfold/ | xargs -r sed -i \
-'s/np\.int\b/int/g;
-s/np\.float\b/float/g;
-s/np\.bool\b/bool/g;
-s/np\.complex\b/complex/g;
-s/np\.object\b/object/g;
-s/np\.str\b/str/g'
-
-if [[ -d $LIGANDMPNN_DIR/model_params ]]; then
-    echo "LigandMPNN weights already there: $LIGANDMPNN_DIR/model_params"
-else
-    (cd $LIGANDMPNN_DIR && bash get_model_params.sh ./model_params)
-fi
 
 # --------------------------------- bashrc --------------------------------------
 
